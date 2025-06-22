@@ -16,12 +16,11 @@ jobs:
         submodules: recursive
 
     - name: Check for bad words
-      run: "! grep -R -n -w -f .bad_words src include"
+      run: "! grep -R -n -w -f .bad_words src include || exit 1"
     
     - name: Run clang-format
-      run: find . -iname "*.h" -o -iname "*.hpp" -o -iname "*.cpp" -exec clang-format --dry-run --Werror -style=file {} +
+      run: find . -iname "*.h" -o -iname "*.hpp" -o -iname "*.cpp" -exec clang-format --dry-run --Werror -style=file {} + || exit 1
 
-    # Regular tests build
     - name: Build default
       run: |
         mkdir -p build && cd build
@@ -33,7 +32,6 @@ jobs:
       working-directory: ./build/tests
       run: ./Run-tests
 
-    # ASAN build
     - name: Build ASAN
       run: |
         mkdir -p build_asan && cd build_asan
@@ -45,7 +43,6 @@ jobs:
       working-directory: ./build_asan/tests
       run: ./Run-tests
 
-    # UBSAN build
     - name: Build USAN
       run: |
         mkdir -p build_ubsan && cd build_ubsan
