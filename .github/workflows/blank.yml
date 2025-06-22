@@ -26,5 +26,5 @@ jobs:
       run: mkdir build && cmake -S. -Bbuild -DUSE_CLANG_TIDY=TRUE -DTESTS_BUILD_TYPE=NONE -DCMAKE_BUILD_TYPE=Release && cmake --build build
     - name: Run default tests
       timeout-minutes: 3
-      working-directory: ./build/tests
+      working-directory: ./tests
       run: ./Run-tests
