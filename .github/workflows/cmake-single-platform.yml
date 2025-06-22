@@ -1,10 +1,11 @@
-name: C++ Project with Catch2 Testing
+name: C++ Project with Catch2
 
 on: [push]
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest  # Changed from self-hosted to GitHub-hosted runner
+
     env:
       CC: gcc
       CXX: g++
@@ -15,18 +16,23 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
+
     - name: Check for bad words
-      run: "! grep -R -n -w -f .bad_words src include || exit 1"
-    
-    - name: Run clang-format
-      run: find . -iname "*.h" -o -iname "*.hpp" -o -iname "*.cpp" -exec clang-format --dry-run --Werror -style=file {} + || exit 1
+      run: "! grep -R -n -w -f .bad_words src include tests"  # Added tests directory
+
+    - name: Run clang format
+      run: find . -iname "*.h" -o -iname "*.hpp" -o -iname "*.cpp" -exec clang-format --dry-run --Werror -style=file {} +
 
     - name: Build default
       run: |
-        mkdir -p build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
-        cmake --build . --parallel
-      
+        mkdir build && 
+        cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && 
+        cmake --build build
+
     - name: Run default tests
       timeout-minutes: 3
       working-directory: ./build/tests
@@ -34,22 +40,22 @@ jobs:
 
     - name: Build ASAN
       run: |
-        mkdir -p build_asan && cd build_asan
-        cmake .. -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=address
-        cmake --build . --parallel
-      
+        mkdir build_ASAN && 
+        cmake -S. -Bbuild_ASAN -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address" && 
+        cmake --build build_ASAN
+
     - name: Run ASAN tests
       timeout-minutes: 5
-      working-directory: ./build_asan/tests
+      working-directory: ./build_ASAN/tests
       run: ./Run-tests
 
     - name: Build USAN
       run: |
-        mkdir -p build_ubsan && cd build_ubsan
-        cmake .. -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=undefined
-        cmake --build . --parallel
-      
+        mkdir build_USAN && 
+        cmake -S. -Bbuild_USAN -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=undefined" && 
+        cmake --build build_USAN
+
     - name: Run USAN tests
       timeout-minutes: 5
-      working-directory: ./build_ubsan/tests
+      working-directory: ./build_USAN/tests
       run: ./Run-tests
